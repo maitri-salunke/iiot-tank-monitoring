@@ -1,0 +1,110 @@
+{
+  "generated_utc": "2026-11-20T15:09:55Z",
+  "tag": "mixed_6x120s",
+  "mode": "alternate",
+  "cycles": 6,
+  "outage_s_each": 120.0,
+  "total_outage_s": 720.0,
+  "wall_time_s": 887.7,
+  "seq_range": [
+    10004,
+    11756
+  ],
+  "expected_msgs": 1753,
+  "influx_rows": 1753,
+  "influx_distinct_seq": 1753,
+  "lost_msgs": 0,
+  "duplicate_rows_in_influx": 0,
+  "duplicate_deliveries_at_ingestor": 0,
+  "missing_seq_sample": [],
+  "field_values_per_msg": 40,
+  "backfill_s": [
+    0.082,
+    0.111,
+    0.092,
+    0.25,
+    0.129,
+    0.142
+  ],
+  "backlog_msgs": [
+    242,
+    248,
+    246,
+    257,
+    249,
+    249
+  ],
+  "gateway_outbox_dropped": 0,
+  "cycles_detail": [
+    {
+      "mode": "net",
+      "duration_s": 120.0,
+      "seq_before": 10003,
+      "seq_at_restore": 10244,
+      "outbox_depth_at_restore": 241,
+      "backlog_at_reconnect": 242,
+      "backfill_s": 0.082,
+      "reconnect_delay_s": 0.18
+    },
+    {
+      "mode": "broker",
+      "duration_s": 120.0,
+      "seq_before": 10287,
+      "seq_at_restore": 10528,
+      "outbox_depth_at_restore": 241,
+      "backlog_at_reconnect": 248,
+      "backfill_s": 0.111,
+      "reconnect_delay_s": 2.76
+    },
+    {
+      "mode": "net",
+      "duration_s": 120.0,
+      "seq_before": 10576,
+      "seq_at_restore": 10818,
+      "outbox_depth_at_restore": 242,
+      "backlog_at_reconnect": 246,
+      "backfill_s": 0.092,
+      "reconnect_delay_s": 1.63
+    },
+    {
+      "mode": "broker",
+      "duration_s": 120.0,
+      "seq_before": 10862,
+      "seq_at_restore": 11107,
+      "outbox_depth_at_restore": 244,
+      "backlog_at_reconnect": 257,
+      "backfill_s": 0.25,
+      "reconnect_delay_s": 2.57
+    },
+    {
+      "mode": "net",
+      "duration_s": 120.0,
+      "seq_before": 11167,
+      "seq_at_restore": 11410,
+      "outbox_depth_at_restore": 242,
+      "backlog_at_reconnect": 249,
+      "backfill_s": 0.129,
+      "reconnect_delay_s": 3.47
+    },
+    {
+      "mode": "broker",
+      "duration_s": 120.0,
+      "seq_before": 11459,
+      "seq_at_restore": 11702,
+      "outbox_depth_at_restore": 242,
+      "backlog_at_reconnect": 249,
+      "backfill_s": 0.142,
+      "reconnect_delay_s": 2.53
+    }
+  ],
+  "method": "docker network disconnect (it_net) / docker stop mosquitto; Influx counts by seq; SIMULATED data",
+  "influx_backfill_s": [
+    0.2,
+    0.3,
+    0.23,
+    1.84,
+    0.29,
+    0.34
+  ],
+  "influx_backfill_method": "gateway CONNACK time -> InfluxDB write-ack of the last message queued during the outage (from pipeline_latency)"
+}

@@ -1,0 +1,16 @@
+{
+  "generated_utc": "2026-11-20T18:24:40Z",
+  "n": 10000,
+  "ok": 10000,
+  "timeouts_or_conn_errors": 0,
+  "exceptions": 0,
+  "cycles_per_s": 1975.5,
+  "cycle_latency_ms": {
+    "p50": 0.46,
+    "p99": 1.38,
+    "max": 85.56
+  },
+  "hr": 50,
+  "coils": 26,
+  "method": "back-to-back FC03(50 regs)+FC01(26 coils) from macOS host -> Docker Desktop port 5502 -> OpenPLC"
+}

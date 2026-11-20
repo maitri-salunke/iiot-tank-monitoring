@@ -1,0 +1,8 @@
+pre-settling at 50.0% ...
+step 50.0->70.0: settle(2% of step)=24.9s settle(+/-2% span)=20.9s overshoot=1.90% ss=[-0.29,+0.32] std=0.096
+step 70.0->50.0: settle(2% of step)=27.7s settle(+/-2% span)=17.8s overshoot=2.20% ss=[-0.33,+0.29] std=0.100
+step 50.0->70.0: settle(2% of step)=26.4s settle(+/-2% span)=21.0s overshoot=1.85% ss=[-0.32,+0.29] std=0.104
+step 70.0->50.0: settle(2% of step)=20.8s settle(+/-2% span)=17.7s overshoot=2.00% ss=[-0.33,+0.35] std=0.105
+step 50.0->70.0: settle(2% of step)=57.1s settle(+/-2% span)=20.9s overshoot=1.90% ss=[-0.35,+0.34] std=0.104
+step 70.0->50.0: settle(2% of step)=24.4s settle(+/-2% span)=17.7s overshoot=2.05% ss=[-0.32,+0.29] std=0.098
+saved results/step_response.json

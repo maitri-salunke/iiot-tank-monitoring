@@ -1,0 +1,1191 @@
+{
+ "uid": "iiot-tank",
+ "title": "Tank control & pump condition (SIL testbed)",
+ "schemaVersion": 39,
+ "version": 2,
+ "editable": false,
+ "refresh": "5s",
+ "time": {
+  "from": "now-15m",
+  "to": "now"
+ },
+ "tags": [
+  "iiot",
+  "simulated"
+ ],
+ "panels": [
+  {
+   "id": 1,
+   "title": "Tank level LT-101 vs setpoint (SIMULATED plant)",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "percent"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"tank\" and (r._field == \"level_pct\" or r._field == \"sp_pct\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ],
+   "options": {},
+   "description": "Level from the Python tank model, controlled by the ST PID running in OpenPLC."
+  },
+  {
+   "id": 2,
+   "title": "Pump speed reference / flows",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {}
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"tank\" and (r._field == \"speed_pct\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    },
+    {
+     "refId": "B",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"tank\" and (r._field == \"fin_lpm\" or r._field == \"fout_lpm\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ],
+   "options": {}
+  },
+  {
+   "id": 3,
+   "title": "Pump running",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 8,
+    "w": 3,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "gray",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"pump_run\") |> last() |> toInt()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 4,
+   "title": "HH alarm",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 3,
+    "y": 8,
+    "w": 3,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"al_hh\") |> last() |> toInt()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 5,
+   "title": "Dry-run trip",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 6,
+    "y": 8,
+    "w": 3,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"dry_trip\") |> last() |> toInt()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 6,
+   "title": "E-stop active",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 9,
+    "y": 8,
+    "w": 3,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"estop\") |> last() |> toInt()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   },
+   "description": "Hardwired in the field; the dashboard only displays it. Nothing on MQTT can reset it."
+  },
+  {
+   "id": 7,
+   "title": "Imbalance alarm (node)",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 8,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"vibration\" and r._field == \"imbalance\") |> last() |> toInt()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 8,
+   "title": "Gateway outbox depth",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 8,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 10
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"gateway_health\" and r._field == \"outbox_depth\") |> last()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 9,
+   "title": "Gateway online",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 20,
+    "y": 8,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -30d)\n  |> filter(fn: (r) => r._measurement == \"gateway_status\" and r._field == \"online\") |> last()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 10,
+   "title": "Pump vibration velocity RMS (SIMULATED ADXL345)",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 12,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "suffix: mm/s",
+     "custom": {
+      "thresholdsStyle": {
+       "mode": "line"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 2.8
+       },
+       {
+        "color": "red",
+        "value": 4.5
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"vibration\" and (r._field == \"vel_rms_mms\" or r._field == \"vel_1x_mms\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ],
+   "options": {}
+  },
+  {
+   "id": 11,
+   "title": "FFT peak frequency / running speed",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 12,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "hertz"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"vibration\" and (r._field == \"peak_hz\" or r._field == \"run_hz\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ],
+   "options": {}
+  },
+  {
+   "id": 12,
+   "title": "Pipeline latency: plant I/O sample -> Influx write ack",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 20,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "ms"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"pipeline_latency\" and (r._field == \"e2e_ms\" or r._field == \"gw_ms\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false)"
+    }
+   ],
+   "options": {}
+  },
+  {
+   "id": 13,
+   "title": "Gateway outbox depth / RTU errors",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 20,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {}
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"gateway_health\" and (r._field == \"outbox_depth\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false)"
+    },
+    {
+     "refId": "B",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"gateway_health\" and (r._field == \"rtu_crc_error\" or r._field == \"rtu_timeout\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false)"
+    }
+   ],
+   "options": {}
+  },
+  {
+   "id": 14,
+   "title": "PID terms LIC-101 (P, I, D, output)",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 28,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "percent"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"tank\" and (r._field == \"pid_p_pct\" or r._field == \"pid_i_pct\" or r._field == \"pid_d_pct\" or r._field == \"pid_out_pct\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)"
+    }
+   ],
+   "options": {},
+   "description": "Diagnostic outputs of FB_PID; P = Kp*(SP-PV), I is preloaded for bumpless transfer."
+  },
+  {
+   "id": 15,
+   "title": "Level filtered / rate of change, net flow",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 28,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {}
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"tank\" and (r._field == \"level_rate_pct_min\" or r._field == \"net_flow_lpm\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)"
+    }
+   ],
+   "options": {}
+  },
+  {
+   "id": 16,
+   "title": "First-out trip",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 36,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "none"
+        },
+        "1": {
+         "text": "E-stop"
+        },
+        "2": {
+         "text": "HH level"
+        },
+        "3": {
+         "text": "dry run"
+        },
+        "4": {
+         "text": "fail to start"
+        },
+        "5": {
+         "text": "I/O fault"
+        }
+       }
+      }
+     ],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"first_out\") |> last()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 17,
+   "title": "Sensor quality word",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 4,
+    "y": 36,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"quality\") |> last()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   },
+   "description": "b0 LT range, b1 LT frozen, b2 FT-101, b3 FT-102, b4 IT-101, b5 LSHH disc., b6 LSLL disc., b7 I/O stale"
+  },
+  {
+   "id": 18,
+   "title": "Active alarms",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 36,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"active_alarms\") |> last()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 19,
+   "title": "Pump starts",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 36,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {}
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -10m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"pump_starts\") |> last()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 20,
+   "title": "Pump runtime",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 36,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "s"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -10m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"pump_runtime_s\") |> last()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 21,
+   "title": "Trips (dry / FTS / HH / E-stop)",
+   "type": "stat",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 20,
+    "y": 36,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {}
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -10m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"dry_trips\") |> last()"
+    },
+    {
+     "refId": "B",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -10m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"fts_trips\") |> last()"
+    },
+    {
+     "refId": "C",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -10m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"hh_trips\") |> last()"
+    },
+    {
+     "refId": "D",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: -10m)\n  |> filter(fn: (r) => r._measurement == \"tank\" and r._field == \"estop_count\") |> last()"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 22,
+   "title": "Vibration: crest factor / kurtosis (X)",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 40,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {}
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"vibration\" and (r._field == \"crest_x\" or r._field == \"kurt_x\" or r._field == \"kurt_y\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)"
+    }
+   ],
+   "options": {},
+   "description": "Sine: crest 1.41, kurtosis 1.5; Gaussian: kurtosis 3; impacting bearing: > 4 (SIMULATED)."
+  },
+  {
+   "id": 23,
+   "title": "Vibration: X acceleration band RMS",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 40,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "suffix: mg"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"vibration\" and (r._field == \"band1_mg\" or r._field == \"band2_mg\" or r._field == \"band3_mg\" or r._field == \"band4_mg\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)"
+    }
+   ],
+   "options": {}
+  },
+  {
+   "id": 24,
+   "title": "Vibration: harmonics 1x/2x/3x/vane-pass, per-axis velocity",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 48,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "suffix: mm/s"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"vibration\" and (r._field == \"vel_1x_mms\" or r._field == \"vel_2x_mms\" or r._field == \"vel_3x_mms\" or r._field == \"vel_vane_mms\" or r._field == \"vel_y_mms\" or r._field == \"vel_z_mms\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)"
+    }
+   ],
+   "options": {}
+  },
+  {
+   "id": 25,
+   "title": "Bearing temperature (SIMULATED NTC) / ISO 10816 zone",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 48,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {}
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"vibration\" and (r._field == \"temp_c\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)"
+    },
+    {
+     "refId": "B",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"vibration\" and (r._field == \"iso_zone\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)"
+    }
+   ],
+   "options": {}
+  },
+  {
+   "id": 26,
+   "title": "Report-by-exception: messages per window",
+   "type": "timeseries",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "influx"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 56,
+    "w": 24,
+    "h": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {}
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "influxdb",
+      "uid": "influx"
+     },
+     "query": "from(bucket: \"iiot\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"poll\" and (r._field == \"seq\"))\n  |> aggregateWindow(every: v.windowPeriod, fn: count, createEmpty: false)"
+    }
+   ],
+   "options": {},
+   "description": "One poll point per MQTT message; PLC polled at 20 Hz, RTU at 2 Hz."
+  }
+ ]
+}

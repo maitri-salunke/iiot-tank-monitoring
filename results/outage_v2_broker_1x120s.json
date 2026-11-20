@@ -1,0 +1,44 @@
+{
+  "generated_utc": "2026-11-20T19:35:58Z",
+  "tag": "v2_broker_1x120s",
+  "mode": "broker",
+  "cycles": 1,
+  "outage_s_each": 120.0,
+  "total_outage_s": 120.0,
+  "wall_time_s": 154.4,
+  "seq_range": [
+    49646,
+    50468
+  ],
+  "expected_msgs": 823,
+  "influx_rows": 823,
+  "influx_distinct_seq": 823,
+  "lost_msgs": 0,
+  "duplicate_rows_in_influx": 0,
+  "duplicate_deliveries_at_ingestor": 0,
+  "missing_seq_sample": [],
+  "field_values_per_msg": 119,
+  "tags": 119,
+  "rbe_on": true,
+  "plc_poll_hz": 20.0,
+  "backfill_s": [
+    0.056
+  ],
+  "backlog_msgs": [
+    698
+  ],
+  "gateway_outbox_dropped": 0,
+  "cycles_detail": [
+    {
+      "mode": "broker",
+      "duration_s": 120.0,
+      "seq_before": 49646,
+      "seq_at_restore": 50328,
+      "outbox_depth_at_restore": 682,
+      "backlog_at_reconnect": 698,
+      "backfill_s": 0.056,
+      "reconnect_delay_s": 3.25
+    }
+  ],
+  "method": "docker network disconnect (it_net) / docker stop mosquitto; Influx counts by seq; SIMULATED data"
+}

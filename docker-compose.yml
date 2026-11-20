@@ -1,0 +1,184 @@
+# iiot-tank-monitoring -- software-in-the-loop IIoT testbed.
+# Everything below runs on one laptop; the plant and the vibration node are SIMULATED.
+#
+#   OT network (ot_net):  plant (Modbus TCP slave) <- openplc (Modbus master + server)
+#                         vibnode (Modbus RTU slave over a socat virtual serial pair)
+#   gateway is dual-homed (OT + IT), like an edge box in a DMZ
+#   IT network (it_net):  mosquitto (mTLS) -> ingestor -> influxdb -> grafana
+#
+# Prerequisite once: ./scripts/gen_certs.sh   (self-signed lab CA)
+
+x-py: &py
+  image: iiot-py:local
+  build:
+    context: .
+    dockerfile: docker/python.Dockerfile
+  restart: unless-stopped
+  init: true
+  logging:
+    driver: json-file
+    options: {max-size: "5m", max-file: "2"}
+
+x-influx-env: &influx_env
+  INFLUX_URL: http://influxdb:8086
+  INFLUX_ORG: iiot
+  INFLUX_BUCKET: iiot
+  INFLUX_TOKEN: ${INFLUX_TOKEN:-iiot-lab-token-not-a-secret}
+
+services:
+  plant:
+    <<: *py
+    container_name: iiot-plant
+    command: ["python", "services/plant/main.py"]
+    environment:
+      PLANT_DT_S: ${PLANT_DT_S:-0.01}   # 100 Hz physics / I/O refresh (was 50 Hz)
+    networks:
+      ot_net: {ipv4_address: 172.28.10.10}
+    ports: ["8081:8081"]           # test-harness API (valve, E-stop, dry-run fault)
+    mem_limit: 128m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8081/')"]
+      interval: 3s
+      retries: 20
+
+  openplc:
+    image: iiot-openplc:local
+    build: ./plc
+    container_name: iiot-openplc
+    restart: unless-stopped
+    environment:
+      PLANT_HOST: plant
+      PLANT_MODBUS_PORT: "5020"
+      OPENPLC_SLAVE_POLL_MS: ${OPENPLC_SLAVE_POLL_MS:-10}   # plant I/O poll (was 50 ms)
+    depends_on:
+      plant: {condition: service_healthy}
+    networks:
+      ot_net: {ipv4_address: 172.28.10.20}
+    ports:
+      - "8080:8080"                # OpenPLC web UI (openplc / openplc -- lab only)
+      - "5502:502"                 # PLC Modbus TCP server (bench scripts)
+    mem_limit: 768m                # matiec + g++ compile at first start
+
+  vibnode:
+    <<: *py
+    container_name: iiot-vibnode
+    command: ["sh", "services/vibnode/entrypoint.sh"]
+    networks:
+      ot_net: {ipv4_address: 172.28.10.30}
+    ports: ["8082:8082"]           # test-harness API (imbalance fault, bit-error rate)
+    mem_limit: 160m
+
+  gateway:
+    <<: *py
+    container_name: iiot-gateway
+    command: ["sh", "services/gateway/entrypoint.sh"]
+    environment:
+      PLC_HOST: openplc
+      PLC_PORT: "502"
+      PLC_POLL_HZ: ${PLC_POLL_HZ:-20}      # Modbus TCP to OpenPLC (was 2 Hz)
+      VIB_POLL_HZ: ${VIB_POLL_HZ:-2}       # Modbus RTU, own thread
+      RBE: ${RBE:-1}                       # report-by-exception with deadbands
+      INTEGRITY_S: ${INTEGRITY_S:-5}       # full snapshot period
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "8883"
+      OUTBOX_PATH: /data/outbox.db
+    volumes:
+      - gateway_data:/data
+      - ./certs:/certs:ro
+    depends_on:
+      openplc: {condition: service_healthy}
+      vibnode: {condition: service_started}
+      mosquitto: {condition: service_started}
+    networks: [ot_net, it_net]
+    ports: ["9100:9100"]           # gateway metrics JSON
+    mem_limit: 160m
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.20
+    container_name: iiot-mosquitto
+    restart: unless-stopped
+    # copy the ACL so it can be owned by the mosquitto user (2.x warns otherwise)
+    command: ["sh", "-c", "install -o mosquitto -g mosquitto -m 0700 /cfg/acl /mosquitto/acl && exec /usr/sbin/mosquitto -c /cfg/mosquitto.conf"]
+    volumes:
+      - ./mosquitto/mosquitto.conf:/cfg/mosquitto.conf:ro
+      - ./mosquitto/acl:/cfg/acl:ro
+      - ./certs:/certs:ro
+      - mosquitto_data:/mosquitto/data
+    networks: [it_net]
+    ports: ["8883:8883"]
+    mem_limit: 64m
+
+  influxdb:
+    image: influxdb:2.7.11
+    container_name: iiot-influxdb
+    restart: unless-stopped
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: iiot-lab-password
+      DOCKER_INFLUXDB_INIT_ORG: iiot
+      DOCKER_INFLUXDB_INIT_BUCKET: iiot
+      DOCKER_INFLUXDB_INIT_RETENTION: 30d
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN:-iiot-lab-token-not-a-secret}
+    volumes: [influx_data:/var/lib/influxdb2]
+    networks: [it_net]
+    ports: ["8086:8086"]
+    mem_limit: 640m
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 3s
+      retries: 30
+
+  ingestor:
+    <<: *py
+    container_name: iiot-ingestor
+    command: ["python", "services/ingestor/main.py"]
+    environment:
+      <<: *influx_env
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "8883"
+      SEEN_PATH: /data/seen.db
+    volumes:
+      - ingestor_data:/data
+      - ./certs:/certs:ro
+    depends_on:
+      influxdb: {condition: service_healthy}
+      mosquitto: {condition: service_started}
+    networks: [it_net]
+    ports: ["9101:9101"]
+    mem_limit: 160m
+
+  grafana:
+    image: grafana/grafana-oss:11.4.0
+    container_name: iiot-grafana
+    restart: unless-stopped
+    environment:
+      <<: *influx_env
+      GF_SECURITY_ADMIN_PASSWORD: iiot-lab-password
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/tank.json
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      influxdb: {condition: service_healthy}
+    networks: [it_net]
+    ports: ["${GRAFANA_PORT:-3300}:3000"]   # host 3000 was already taken on the dev machine
+    mem_limit: 256m
+
+networks:
+  ot_net:
+    ipam:
+      config: [{subnet: 172.28.10.0/24}]
+  it_net:
+    ipam:
+      config: [{subnet: 172.28.20.0/24}]
+
+volumes:
+  gateway_data:
+  ingestor_data:
+  mosquitto_data:
+  influx_data:

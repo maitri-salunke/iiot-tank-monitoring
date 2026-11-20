@@ -1,0 +1,45 @@
+{
+  "generated_utc": "2026-11-20T15:22:05Z",
+  "tag": "broker_kill_1x60s",
+  "mode": "kill",
+  "cycles": 1,
+  "outage_s_each": 60.0,
+  "total_outage_s": 60.0,
+  "wall_time_s": 94.6,
+  "seq_range": [
+    13052,
+    13220
+  ],
+  "expected_msgs": 169,
+  "influx_rows": 169,
+  "influx_distinct_seq": 169,
+  "lost_msgs": 0,
+  "duplicate_rows_in_influx": 0,
+  "duplicate_deliveries_at_ingestor": 0,
+  "missing_seq_sample": [],
+  "field_values_per_msg": 40,
+  "backfill_s": [
+    0.072
+  ],
+  "backlog_msgs": [
+    126
+  ],
+  "gateway_outbox_dropped": 0,
+  "cycles_detail": [
+    {
+      "mode": "kill",
+      "duration_s": 60.0,
+      "seq_before": 13051,
+      "seq_at_restore": 13171,
+      "outbox_depth_at_restore": 120,
+      "backlog_at_reconnect": 126,
+      "backfill_s": 0.072,
+      "reconnect_delay_s": 2.85
+    }
+  ],
+  "method": "docker network disconnect (it_net) / docker stop mosquitto; Influx counts by seq; SIMULATED data",
+  "influx_backfill_s": [
+    0.15
+  ],
+  "influx_backfill_method": "gateway CONNACK time -> InfluxDB write-ack of the last message queued during the outage (from pipeline_latency)"
+}

@@ -1,0 +1,66 @@
+{
+  "generated_utc": "2026-11-20T19:32:59Z",
+  "window_min": 15.0,
+  "n": 4653,
+  "method": "ingestor writes pipeline_latency after each Influx write ack; percentiles nearest-rank; SIMULATED plant timestamps; same clock (Docker VM); excludes Grafana refresh",
+  "n_plc": 3749,
+  "n_vib_only": 904,
+  "e2e_ms": {
+    "p50": 28.0,
+    "p95": 44.0,
+    "p99": 56.0,
+    "max": 129.0,
+    "min": 8.0
+  },
+  "gw_ms": {
+    "p50": 8.0,
+    "p95": 15.0,
+    "p99": 38.0,
+    "max": 111.0,
+    "min": 2.0
+  },
+  "src_age_ms": {
+    "p50": 19.0,
+    "p95": 33.0,
+    "p99": 40.0,
+    "max": 58.0,
+    "min": 2.0
+  },
+  "gw_ms_vib": {
+    "p50": 69.0,
+    "p95": 78.0,
+    "p99": 89.0,
+    "max": 117.0,
+    "min": 59.0
+  },
+  "gateway_poll_hz": 20.0,
+  "vib_poll_hz": 2.0,
+  "tags": 119,
+  "rbe_on": true,
+  "integrity_s": 5.0,
+  "rbe_window": {
+    "plc": {
+      "polls": 18002,
+      "integrity": 179,
+      "change": 3570,
+      "suppressed": 14253,
+      "fields_polled": 1332148,
+      "fields_sent": 24722,
+      "msgs_per_s": 4.16,
+      "polls_per_s": 20.0,
+      "fields_sent_frac": 0.0186
+    },
+    "vib": {
+      "polls": 1801,
+      "integrity": 170,
+      "change": 758,
+      "suppressed": 873,
+      "fields_polled": 81045,
+      "fields_sent": 9415,
+      "msgs_per_s": 1.03,
+      "polls_per_s": 2.0,
+      "fields_sent_frac": 0.1162
+    }
+  },
+  "poll_overruns": 1
+}

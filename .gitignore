@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+certs/
+firmware/vibration-node/.pio/
+.DS_Store

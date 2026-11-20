@@ -1,0 +1,4 @@
+[1/1] net outage for 600s (seq 11782)
+    {'mode': 'net', 'duration_s': 600.0, 'seq_before': 11782, 'seq_at_restore': 12984, 'outbox_depth_at_restore': 1201, 'backlog_at_reconnect': 1205, 'backfill_s': 0.14, 'reconnect_delay_s': 1.82}
+{'tag': 'net_1x600s', 'mode': 'net', 'cycles': 1, 'outage_s_each': 600.0, 'total_outage_s': 600.0, 'wall_time_s': 634.8, 'seq_range': [11781, 13030], 'expected_msgs': 1250, 'influx_rows': 1250, 'influx_distinct_seq': 1250, 'lost_msgs': 0, 'duplicate_rows_in_influx': 0, 'duplicate_deliveries_at_ingestor': 0, 'missing_seq_sample': [], 'field_values_per_msg': 40, 'backfill_s': [0.14], 'backlog_msgs': [1205], 'gateway_outbox_dropped': 0, 'method': 'docker network disconnect (it_net) / docker stop mosquitto; Influx counts by seq; SIMULATED data'}
+saved results/outage_net_1x600s.json

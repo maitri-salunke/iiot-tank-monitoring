@@ -1,0 +1,44 @@
+{
+  "generated_utc": "2026-11-20T19:56:39Z",
+  "method": "SP written to OpenPLC %MW0 via Modbus TCP; PLC level tag sampled at 20 Hz; settling = last exit from band (2% of step size, i.e. +/-0.4 % level, and +/-2 % of span); overshoot as % of step; steady band over last 30 s of each 120 s step. SIMULATED tank.",
+  "gains": {
+    "kp": 15.0,
+    "ti_s": 12.0,
+    "td_s": 0.0
+  },
+  "task_ms": 50,
+  "steps": [
+    {
+      "settling_time_s": 53.705851417034864,
+      "settled": true,
+      "overshoot_pct": 2.049999999999983,
+      "rise_time_s": 17.748116332571954,
+      "ss_min": -0.37000000000000455,
+      "ss_max": 0.35999999999999943,
+      "ss_mean": 0.0028000000000000112,
+      "ss_std": 0.10367494072018274,
+      "band_abs": 0.4,
+      "settling_time_2pct_span_s": 20.906416000332683,
+      "cycle": 0,
+      "from": 50.0,
+      "to": 70.0,
+      "u_max": 100.0
+    },
+    {
+      "settling_time_s": 28.501229625195265,
+      "settled": true,
+      "overshoot_pct": 2.1999999999999886,
+      "rise_time_s": 14.701476000249386,
+      "ss_min": -0.35999999999999943,
+      "ss_max": 0.29999999999999716,
+      "ss_mean": -0.0036833333333333228,
+      "ss_std": 0.10306437982585888,
+      "band_abs": 0.4,
+      "settling_time_2pct_span_s": 17.60758108412847,
+      "cycle": 0,
+      "from": 70.0,
+      "to": 50.0,
+      "u_max": 59.28
+    }
+  ]
+}

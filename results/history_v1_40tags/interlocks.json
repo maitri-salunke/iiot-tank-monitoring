@@ -1,0 +1,46 @@
+{
+  "generated_utc": "2026-11-20T13:52:36Z",
+  "method": "faults injected via plant test API / docker pause; PLC status word polled at ~50 Hz over Modbus TCP; t_s = injection -> PUMP_RUN false with expected bit",
+  "cases": [
+    {
+      "case": "field E-stop pressed",
+      "tripped": true,
+      "t_s": 0.05,
+      "status": "0x40",
+      "note": "contactor drops in the field; PLC sees ESTOP_OK=0 and drops seal-in"
+    },
+    {
+      "case": "no auto-restart after E-stop released",
+      "tripped": true,
+      "t_s": null,
+      "status": "0x80"
+    },
+    {
+      "case": "dry run (suction lost)",
+      "tripped": true,
+      "t_s": 3.05,
+      "status": "0x20",
+      "note": "TON 3 s on run+fb+speed>=20%+inflow<2 L/min, latched"
+    },
+    {
+      "case": "dry-run latch holds until RESET",
+      "tripped": true,
+      "t_s": null,
+      "status": "0x80"
+    },
+    {
+      "case": "high-high level (LSHH / >=95 %)",
+      "tripped": true,
+      "t_s": 0.07,
+      "status": "0xa"
+    },
+    {
+      "case": "plant I/O frozen (docker pause plant)",
+      "tripped": true,
+      "t_s": 2.08,
+      "status": "0x200",
+      "note": "sample counter stale 2 s -> IO_FAULT -> permissive lost"
+    }
+  ],
+  "all_passed": true
+}

@@ -1,0 +1,115 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: tank-and-pump
+    folder: IIoT
+    interval: 10s
+    rules:
+      - uid: tank-level-high
+        title: Tank level high (> 85 %)
+        condition: C
+        for: 10s
+        noDataState: NoData
+        execErrState: Error
+        labels: {severity: warning}
+        annotations: {summary: "LT-101 above 85 % (PLC also raises AL_H; HH trip is in the PLC, not here)"}
+        data:
+          - refId: A
+            relativeTimeRange: {from: 60, to: 0}
+            datasourceUid: influx
+            model:
+              refId: A
+              query: |
+                from(bucket: "iiot") |> range(start: -1m)
+                  |> filter(fn: (r) => r._measurement == "tank" and r._field == "level_pct") |> last()
+          - refId: B
+            datasourceUid: __expr__
+            model: {refId: B, type: reduce, expression: A, reducer: last}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions: [{evaluator: {type: gt, params: [85]}}]
+      - uid: pump-dry-run-trip
+        title: Pump dry-run trip
+        condition: C
+        for: 0s
+        noDataState: NoData
+        execErrState: Error
+        labels: {severity: critical}
+        annotations: {summary: "PLC latched DRY_TRIP (pump ran with no flow for 3 s). Reset at the PLC/HMI."}
+        data:
+          - refId: A
+            relativeTimeRange: {from: 60, to: 0}
+            datasourceUid: influx
+            model:
+              refId: A
+              query: |
+                from(bucket: "iiot") |> range(start: -1m)
+                  |> filter(fn: (r) => r._measurement == "tank" and r._field == "dry_trip") |> last() |> toInt()
+          - refId: B
+            datasourceUid: __expr__
+            model: {refId: B, type: reduce, expression: A, reducer: last}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions: [{evaluator: {type: gt, params: [0.5]}}]
+      - uid: pump-imbalance
+        title: Pump imbalance (node alarm bit)
+        condition: C
+        for: 0s
+        noDataState: NoData
+        execErrState: Error
+        labels: {severity: warning}
+        annotations: {summary: "Node's debounced imbalance bit (1x > 2.8 mm/s RMS and dominant) seen in the last 20 s (SIMULATED sensor)."}
+        data:
+          - refId: A
+            relativeTimeRange: {from: 60, to: 0}
+            datasourceUid: influx
+            model:
+              refId: A
+              query: |
+                from(bucket: "iiot") |> range(start: -20s)
+                  |> filter(fn: (r) => r._measurement == "vibration" and r._field == "imbalance") |> toInt() |> max()
+          - refId: B
+            datasourceUid: __expr__
+            model: {refId: B, type: reduce, expression: A, reducer: last}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions: [{evaluator: {type: gt, params: [0.5]}}]
+      - uid: gateway-offline
+        title: Gateway offline / no telemetry
+        condition: C
+        for: 15s
+        noDataState: Alerting
+        execErrState: Alerting
+        labels: {severity: critical}
+        annotations: {summary: "No telemetry rows written in the last 30 s (gateway LWT, broker or WAN down)."}
+        data:
+          - refId: A
+            relativeTimeRange: {from: 60, to: 0}
+            datasourceUid: influx
+            model:
+              refId: A
+              query: |
+                from(bucket: "iiot") |> range(start: -30s)
+                  |> filter(fn: (r) => r._measurement == "poll" and r._field == "seq") |> count()
+          - refId: B
+            datasourceUid: __expr__
+            model: {refId: B, type: reduce, expression: A, reducer: last}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions: [{evaluator: {type: lt, params: [1]}}]

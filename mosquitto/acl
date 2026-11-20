@@ -1,0 +1,11 @@
+# username = certificate CN (use_identity_as_username)
+user gateway
+topic write iiot/+/+/telemetry
+topic readwrite iiot/+/+/status
+topic write iiot/+/+/health
+
+user ingestor
+topic read iiot/#
+
+user bench
+topic read iiot/#

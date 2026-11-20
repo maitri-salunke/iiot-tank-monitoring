@@ -1,0 +1,28 @@
+{
+  "generated_utc": "2026-11-20T14:49:26Z",
+  "window_min": 15.0,
+  "n": 1800,
+  "method": "ingestor writes pipeline_latency after each Influx write ack; percentiles nearest-rank; SIMULATED plant timestamps; same clock (Docker VM); excludes Grafana refresh",
+  "e2e_ms": {
+    "p50": 170.0,
+    "p95": 202.0,
+    "p99": 223.0,
+    "max": 330.0,
+    "min": 113.0
+  },
+  "gw_ms": {
+    "p50": 103.0,
+    "p95": 118.0,
+    "p99": 142.0,
+    "max": 269.0,
+    "min": 50.0
+  },
+  "src_age_ms": {
+    "p50": 62.0,
+    "p95": 98.0,
+    "p99": 102.0,
+    "max": 105.0,
+    "min": 36.0
+  },
+  "gateway_poll_hz": 2.0
+}
