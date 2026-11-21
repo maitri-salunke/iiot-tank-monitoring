@@ -87,6 +87,18 @@ def modbus_write_reg(host, port, reg, value, unit=1):
     return resp[7] == 6
 
 
+def plc_modbus_up(timeout_s):
+    """True once the PLC's Modbus server on :502 answers a write, within timeout_s."""
+    for _ in range(timeout_s):
+        try:
+            if modbus_write_reg("127.0.0.1", 502, 1024 + 1, 0):
+                return True
+        except OSError:
+            pass
+        time.sleep(1)
+    return False
+
+
 def main():
     wait_http()
     out = post_form("/login", {"username": "openplc", "password": "openplc"})
@@ -150,17 +162,13 @@ def main():
     else:
         log("already provisioned with this program/config")
 
-    get("/start_plc")
-    # wait for the PLC Modbus server to come up and the program to scan
-    for _ in range(60):
-        try:
-            if modbus_write_reg("127.0.0.1", 502, 1024 + 1, 0):
-                break
-        except OSError:
-            pass
-        time.sleep(1)
-    else:
-        raise RuntimeError("PLC Modbus server not reachable")
+    # On a restarted container the runtime auto-starts in RUN mode; calling /start_plc
+    # again would restart it and drop the Modbus server, so only start it if it is down.
+    if not (already and plc_modbus_up(20)):
+        get("/start_plc")
+        # wait for the PLC Modbus server to come up and the program to scan
+        if not plc_modbus_up(60):
+            raise RuntimeError("PLC Modbus server not reachable")
     log("PLC running, Modbus server on :502")
     if AUTO_START:
         time.sleep(2)  # let the slave poll fill %IW / %IX

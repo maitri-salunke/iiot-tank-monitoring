@@ -9,6 +9,10 @@ An end-to-end industrial-IoT stack that runs entirely on a laptop:
 > number in the results table was measured on this stack by the scripts in
 > `bench/`.
 
+![Grafana dashboard during a setpoint step, an imbalance fault and a broker outage](docs/media/scenario.gif)
+
+*Time-lapse of about 6 min on the running stack (about 16× speed): setpoint step 50→70 %, an injected pump-imbalance fault, then a 75 s broker outage during which the setpoint goes back to 50 %; that step appears once the gateway backfills its outbox. Plant and vibration are simulated. [MP4](docs/media/scenario.mp4)*
+
 ## What is real and what is simulated
 
 | Part | Status |
@@ -374,6 +378,20 @@ The v1 files are kept in `results/history_v1_40tags/`.
 | Interlock: dry-run latch holds until RESET | PASS | fault injected via plant test API |
 | Interlock: high-high level (LSHH / >=95 %) | PASS, 0.03 s | fault injected via plant test API |
 | Interlock: plant I/O frozen (docker pause plant) | PASS, 2.0 s | fault injected via plant test API |
+
+**Dashboard captures (v2, 2026-11-21).** These are from the scenario in the animation at the top. They illustrate the stack's behaviour; they are not part of the measured results. [Full dashboard](docs/media/dashboard_full.png).
+
+![level vs setpoint](docs/media/panel_level_setpoint.png)
+
+*LT-101 level against setpoint: step 50→70 % at 19:47, and 70→50 % at 19:50:44 while the broker was down (written to InfluxDB after reconnect).*
+
+![vibration velocity](docs/media/panel_vibration.png)
+
+*Injected 1x imbalance (+3.5 mm/s) crosses the 2.8 mm/s imbalance line; the node's imbalance flag reached InfluxDB 1.7 s after injection.*
+
+![outbox depth during broker outage](docs/media/panel_outbox_backfill.png)
+
+*Gateway outbox depth during a 75 s `docker stop` of the broker: about 600 messages queued in SQLite, then drained in 0.04 s after reconnect.*
 
 **Caveats on the v2 numbers:**
 * **Latency tail.** In the RBE-off run the max was 43 s. The ingestor went silent
